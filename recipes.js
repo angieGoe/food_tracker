@@ -406,6 +406,130 @@ const RECIPES_DB = [
         source: 'USDA FoodData Central'
     },
 
+    // ==================== THIS WEEK'S RECIPES ====================
+    {
+        id: 'w1',
+        name: 'Cottage Cheese Chicken Caesar',
+        category: 'lunch',
+        emoji: '🥗',
+        servings: 1,
+        calories: 600,
+        protein: 75,
+        carbs: 18,
+        fat: 20,
+        fiber: 3,
+        ingredients: [
+            '225g (8 oz) grilled chicken breast, sliced',
+            '225g (1 cup) low-fat cottage cheese',
+            '1 tbsp lemon juice',
+            '1 tsp Dijon mustard',
+            '1 clove garlic, minced',
+            '2 tbsp grated Parmesan cheese',
+            '1 tsp Worcestershire sauce',
+            '3-4 cups chopped romaine lettuce',
+            '30g croutons (optional)',
+            'Salt and pepper to taste'
+        ],
+        instructions: [
+            'Blend cottage cheese, lemon juice, Dijon mustard, garlic, half the Parmesan, and Worcestershire sauce until smooth. Season with salt and pepper.',
+            'Season chicken breast with salt, pepper, and garlic powder. Grill or pan-sear over medium-high heat until internal temp reaches 165°F (~6-7 min per side). Let rest, then slice.',
+            'Toss romaine lettuce with the cottage cheese caesar dressing.',
+            'Top with sliced chicken, remaining Parmesan, and croutons if using.'
+        ],
+        storage: 'Store dressing and chicken separately up to 3 days. Assemble fresh when serving to keep lettuce crisp.',
+        source: 'Instagram @recipe (75g Protein | 600kcal)'
+    },
+    {
+        id: 'w2',
+        name: 'Sun-Dried Tomato Chicken & Gnocchi',
+        category: 'dinner',
+        emoji: '🍲',
+        servings: 4,
+        calories: 470,
+        protein: 33,
+        carbs: 28,
+        fat: 25,
+        fiber: 3,
+        ingredients: [
+            '1 (16 oz) package cauliflower potato gnocchi',
+            '1.5 lbs boneless, skinless chicken thighs',
+            'Kosher salt and freshly ground black pepper',
+            '3 tbsp unsalted butter, divided',
+            '1 medium shallot, diced',
+            '1/2 cup sun-dried tomato halves',
+            '1 tbsp tomato paste',
+            '3 cloves garlic, minced',
+            '2 tsp chopped fresh thyme leaves',
+            '3 tbsp all-purpose flour',
+            '1 3/4 cups chicken broth',
+            '1/4 cup dry white wine',
+            '1/2 cup half and half',
+            '1 bunch kale, stems removed, leaves torn',
+            '1/2 cup freshly grated Parmesan'
+        ],
+        instructions: [
+            'Preheat oven to 400°F.',
+            'Cook gnocchi according to package directions in boiling salted water; drain well.',
+            'Season chicken with 3/4 tsp salt and 1/2 tsp pepper.',
+            'Melt 2 tbsp butter in Dutch oven over medium heat. Cook chicken in batches until golden and cooked through (4-5 min per side). Set aside.',
+            'Melt remaining butter, add shallot and cook 3-5 min until tender.',
+            'Stir in sun-dried tomatoes, tomato paste, garlic, and thyme for 1 minute.',
+            'Whisk in flour until lightly browned (about 1 minute).',
+            'Gradually whisk in broth and wine, cooking 3-5 min until slightly thickened.',
+            'Stir in half and half until thickened (1-2 min). Season with salt and pepper.',
+            'Stir in gnocchi and kale until kale wilts (1-2 min).',
+            'Return chicken to skillet and sprinkle with Parmesan.',
+            'Bake until bubbly (10-12 min). Serve immediately.'
+        ],
+        storage: 'Leftovers keep 3-4 days in an airtight container in the fridge. Reheat in microwave 2 min or in oven at 350°F for 10 min.',
+        source: 'damndelicious.net'
+    },
+    {
+        id: 'w3',
+        name: 'Protein Shake',
+        category: 'snack',
+        emoji: '🥤',
+        servings: 1,
+        calories: 369,
+        protein: 42,
+        carbs: 21,
+        fat: 8,
+        fiber: 2,
+        ingredients: [
+            '1 scoop protein powder',
+            '250ml oat milk or water',
+            '1/2 banana (optional)',
+            'Ice cubes'
+        ],
+        instructions: [
+            'Add all ingredients to a blender.',
+            'Blend until smooth.',
+            'Pour and drink immediately.'
+        ],
+        storage: 'Best consumed immediately. Can refrigerate up to 12 hours — shake well before drinking.',
+        source: 'User-provided macros: 41.9g P, 20.8g C, 7.9g F, 369 kcal'
+    },
+    {
+        id: 'w4',
+        name: "David's Protein Bar",
+        category: 'snack',
+        emoji: '🍫',
+        servings: 1,
+        calories: 180,
+        protein: 16,
+        carbs: 18,
+        fat: 7,
+        fiber: 7,
+        ingredients: [
+            "1 David's Protein Bar"
+        ],
+        instructions: [
+            'Unwrap and eat.'
+        ],
+        storage: 'Store at room temperature. Check expiration date on packaging.',
+        source: 'Product label (estimated — verify against your bar packaging)'
+    },
+
     // ==================== SNACKS ====================
     {
         id: 's1',

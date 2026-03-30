@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Tracker - Macro & Protein Tracker</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥗</text></svg>">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Sidebar Navigation -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-icon">🥗</span>
+                    <span class="logo-text">FoodTracker</span>
+                </div>
+            </div>
+            <ul class="nav-links">
+                <li class="nav-item active" data-page="dashboard">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    <span>Dashboard</span>
+                </li>
+                <li class="nav-item" data-page="meals">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+                    <span>Meals</span>
+                </li>
+                <li class="nav-item" data-page="recipes">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+                    <span>Recipes</span>
+                </li>
+                <li class="nav-item" data-page="shopping">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+                    <span>Shopping List</span>
+                </li>
+                <li class="nav-item" data-page="history">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    <span>History</span>
+                </li>
+                <li class="nav-item" data-page="pantry">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    <span>My Pantry</span>
+                </li>
+                <li class="nav-item" data-page="settings">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                    <span>Settings</span>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <div class="reassess-reminder" id="reassessReminder" style="display:none;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span>Time to reassess targets!</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main id="main-content">
+            <!-- Dashboard Page -->
+            <section id="page-dashboard" class="page active">
+                <header class="page-header">
+                    <div>
+                        <h1>Dashboard</h1>
+                        <p class="subtitle" id="currentDate"></p>
+                    </div>
+                    <div class="date-nav">
+                        <button class="btn-icon" id="prevDay">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                        </button>
+                        <button class="btn-secondary" id="todayBtn">Today</button>
+                        <button class="btn-icon" id="nextDay">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                    </div>
+                </header>
+
+                <!-- Macro Rings -->
+                <div class="macro-overview">
+                    <div class="calorie-ring-container">
+                        <div class="ring-chart large" id="calorieRing">
+                            <svg viewBox="0 0 120 120">
+                                <circle class="ring-bg" cx="60" cy="60" r="52"/>
+                                <circle class="ring-fill calories" cx="60" cy="60" r="52" id="calorieRingFill"/>
+                            </svg>
+                            <div class="ring-center">
+                                <span class="ring-value" id="caloriesConsumed">0</span>
+                                <span class="ring-label">of <span id="calorieTarget">1,638</span> kcal</span>
+                            </div>
+                        </div>
+                        <p class="ring-title">Calories</p>
+                    </div>
+                    <div class="macro-rings">
+                        <div class="macro-ring-item">
+                            <div class="ring-chart" id="proteinRing">
+                                <svg viewBox="0 0 100 100">
+                                    <circle class="ring-bg" cx="50" cy="50" r="42"/>
+                                    <circle class="ring-fill protein" cx="50" cy="50" r="42" id="proteinRingFill"/>
+                                </svg>
+                                <div class="ring-center">
+                                    <span class="ring-value" id="proteinConsumed">0</span>
+                                    <span class="ring-unit">g</span>
+                                </div>
+                            </div>
+                            <p class="ring-title">Protein</p>
+                            <p class="ring-subtitle">Target: <span id="proteinTarget">127</span>g</p>
+                        </div>
+                        <div class="macro-ring-item">
+                            <div class="ring-chart" id="carbsRing">
+                                <svg viewBox="0 0 100 100">
+                                    <circle class="ring-bg" cx="50" cy="50" r="42"/>
+                                    <circle class="ring-fill carbs" cx="50" cy="50" r="42" id="carbsRingFill"/>
+                                </svg>
+                                <div class="ring-center">
+                                    <span class="ring-value" id="carbsConsumed">0</span>
+                                    <span class="ring-unit">g</span>
+                                </div>
+                            </div>
+                            <p class="ring-title">Net Carbs</p>
+                            <p class="ring-subtitle">Target: <span id="carbsTarget">190</span>g</p>
+                        </div>
+                        <div class="macro-ring-item">
+                            <div class="ring-chart" id="fatRing">
+                                <svg viewBox="0 0 100 100">
+                                    <circle class="ring-bg" cx="50" cy="50" r="42"/>
+                                    <circle class="ring-fill fat" cx="50" cy="50" r="42" id="fatRingFill"/>
+                                </svg>
+                                <div class="ring-center">
+                                    <span class="ring-value" id="fatConsumed">0</span>
+                                    <span class="ring-unit">g</span>
+                                </div>
+                            </div>
+                            <p class="ring-title">Fat</p>
+                            <p class="ring-subtitle">Target: <span id="fatTarget">47</span>g</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Meal Slots -->
+                <div class="meal-slots">
+                    <h2>Today's Meals</h2>
+                    <div class="meal-slot" id="slot-breakfast">
+                        <div class="meal-slot-header">
+                            <div class="meal-slot-info">
+                                <span class="meal-slot-icon">🌅</span>
+                                <div>
+                                    <h3>Breakfast</h3>
+                                    <p class="meal-slot-macros" id="breakfast-macros">No meal selected</p>
+                                </div>
+                            </div>
+                            <button class="btn-primary btn-sm" onclick="app.openMealPicker('breakfast')">+ Add</button>
+                        </div>
+                        <div class="meal-slot-content" id="breakfast-content"></div>
+                    </div>
+                    <div class="meal-slot" id="slot-lunch">
+                        <div class="meal-slot-header">
+                            <div class="meal-slot-info">
+                                <span class="meal-slot-icon">☀️</span>
+                                <div>
+                                    <h3>Lunch</h3>
+                                    <p class="meal-slot-macros" id="lunch-macros">No meal selected</p>
+                                </div>
+                            </div>
+                            <button class="btn-primary btn-sm" onclick="app.openMealPicker('lunch')">+ Add</button>
+                        </div>
+                        <div class="meal-slot-content" id="lunch-content"></div>
+                    </div>
+                    <div class="meal-slot" id="slot-dinner">
+                        <div class="meal-slot-header">
+                            <div class="meal-slot-info">
+                                <span class="meal-slot-icon">🌙</span>
+                                <div>
+                                    <h3>Dinner</h3>
+                                    <p class="meal-slot-macros" id="dinner-macros">No meal selected</p>
+                                </div>
+                            </div>
+                            <button class="btn-primary btn-sm" onclick="app.openMealPicker('dinner')">+ Add</button>
+                        </div>
+                        <div class="meal-slot-content" id="dinner-content"></div>
+                    </div>
+                    <div class="meal-slot" id="slot-snack">
+                        <div class="meal-slot-header">
+                            <div class="meal-slot-info">
+                                <span class="meal-slot-icon">🍎</span>
+                                <div>
+                                    <h3>Snack</h3>
+                                    <p class="meal-slot-macros" id="snack-macros">No meal selected</p>
+                                </div>
+                            </div>
+                            <button class="btn-primary btn-sm" onclick="app.openMealPicker('snack')">+ Add</button>
+                        </div>
+                        <div class="meal-slot-content" id="snack-content"></div>
+                    </div>
+                </div>
+
+                <!-- Weekly Macro Bar Chart -->
+                <div class="weekly-overview">
+                    <h2>Weekly Overview</h2>
+                    <div class="weekly-chart" id="weeklyChart"></div>
+                </div>
+            </section>
+
+            <!-- Meals Page -->
+            <section id="page-meals" class="page">
+                <header class="page-header">
+                    <div>
+                        <h1>Meal Planner</h1>
+                        <p class="subtitle">Drag recipes into your meal slots</p>
+                    </div>
+                </header>
+                <div class="meal-planner-grid">
+                    <div class="planner-day" id="plannerContent"></div>
+                </div>
+            </section>
+
+            <!-- Recipes Page -->
+            <section id="page-recipes" class="page">
+                <header class="page-header">
+                    <div>
+                        <h1>Recipes</h1>
+                        <p class="subtitle">Your high-protein recipe collection</p>
+                    </div>
+                    <button class="btn-primary" onclick="app.showAddRecipeModal()">+ Add Recipe</button>
+                </header>
+                <div class="recipe-filters">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="breakfast">Breakfast</button>
+                    <button class="filter-btn" data-filter="lunch">Lunch</button>
+                    <button class="filter-btn" data-filter="dinner">Dinner</button>
+                    <button class="filter-btn" data-filter="snack">Snack</button>
+                </div>
+                <div class="recipe-grid" id="recipeGrid"></div>
+            </section>
+
+            <!-- Shopping List Page -->
+            <section id="page-shopping" class="page">
+                <header class="page-header">
+                    <div>
+                        <h1>Shopping List</h1>
+                        <p class="subtitle">Organized by store section</p>
+                    </div>
+                    <button class="btn-secondary" onclick="app.generateShoppingList()">Generate from Meal Plan</button>
+                </header>
+                <div id="shoppingListContent"></div>
+            </section>
+
+            <!-- History Page -->
+            <section id="page-history" class="page">
+                <header class="page-header">
+                    <div>
+                        <h1>History</h1>
+                        <p class="subtitle">Your nutrition journey</p>
+                    </div>
+                </header>
+                <div class="history-stats">
+                    <div class="stat-card">
+                        <h3>Avg Daily Protein</h3>
+                        <span class="stat-value" id="avgProtein">--</span>
+                        <span class="stat-unit">g / day</span>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Avg Daily Calories</h3>
+                        <span class="stat-value" id="avgCalories">--</span>
+                        <span class="stat-unit">kcal / day</span>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Days Tracked</h3>
+                        <span class="stat-value" id="daysTracked">0</span>
+                        <span class="stat-unit">days</span>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Protein Goal Hit</h3>
+                        <span class="stat-value" id="proteinGoalHit">0%</span>
+                        <span class="stat-unit">of days</span>
+                    </div>
+                </div>
+                <div class="history-chart-container">
+                    <h2>Protein Intake (Last 30 Days)</h2>
+                    <div class="history-chart" id="historyChart"></div>
+                </div>
+                <div class="history-log" id="historyLog"></div>
+            </section>
+
+            <!-- Pantry Page -->
+            <section id="page-pantry" class="page">
+                <header class="page-header">
+                    <div>
+                        <h1>My Pantry</h1>
+                        <p class="subtitle">What's currently in your kitchen</p>
+                    </div>
+                    <button class="btn-primary" onclick="app.syncPantry()">Sync from Notion</button>
+                </header>
+                <div id="pantryContent"></div>
+            </section>
+
+            <!-- Settings Page -->
+            <section id="page-settings" class="page">
+                <header class="page-header">
+                    <div>
+                        <h1>Settings</h1>
+                        <p class="subtitle">Your profile & macro targets</p>
+                    </div>
+                </header>
+                <div class="settings-content">
+                    <div class="settings-section">
+                        <h2>Profile</h2>
+                        <div class="settings-grid">
+                            <div class="setting-field">
+                                <label>Age</label>
+                                <input type="number" id="settingAge" value="34">
+                            </div>
+                            <div class="setting-field">
+                                <label>Weight (kg)</label>
+                                <input type="number" id="settingWeight" value="62" step="0.1">
+                            </div>
+                            <div class="setting-field">
+                                <label>Height (cm)</label>
+                                <input type="number" id="settingHeight" value="160">
+                            </div>
+                            <div class="setting-field">
+                                <label>Sex</label>
+                                <select id="settingSex">
+                                    <option value="female" selected>Female</option>
+                                    <option value="male">Male</option>
+                                </select>
+                            </div>
+                            <div class="setting-field">
+                                <label>Activity Level</label>
+                                <select id="settingActivity">
+                                    <option value="sedentary">Sedentary</option>
+                                    <option value="light">Lightly Active</option>
+                                    <option value="moderate" selected>Moderately Active</option>
+                                    <option value="active">Very Active</option>
+                                    <option value="extra">Extra Active</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <h2>Macro Targets</h2>
+                        <div class="settings-grid">
+                            <div class="setting-field">
+                                <label>Daily Calories (kcal)</label>
+                                <input type="number" id="settingCalories" value="1638">
+                            </div>
+                            <div class="setting-field">
+                                <label>Protein (g)</label>
+                                <input type="number" id="settingProtein" value="127">
+                                <span class="setting-hint">30% - ~40g per meal (3 meals)</span>
+                            </div>
+                            <div class="setting-field">
+                                <label>Net Carbs (g)</label>
+                                <input type="number" id="settingCarbs" value="190">
+                                <span class="setting-hint">45% - can go as low as 100g</span>
+                            </div>
+                            <div class="setting-field">
+                                <label>Fat (g)</label>
+                                <input type="number" id="settingFat" value="47">
+                                <span class="setting-hint">25%</span>
+                            </div>
+                        </div>
+                        <div class="macro-split-visual">
+                            <div class="macro-bar">
+                                <div class="macro-bar-segment protein" style="width:30%"><span>Protein 30%</span></div>
+                                <div class="macro-bar-segment carbs" style="width:45%"><span>Carbs 45%</span></div>
+                                <div class="macro-bar-segment fat" style="width:25%"><span>Fat 25%</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <h2>Reassessment</h2>
+                        <p>Last assessed: <strong id="lastAssessed">March 30, 2026</strong></p>
+                        <p>Next reassessment: <strong id="nextAssessment">April 30, 2026</strong></p>
+                        <button class="btn-primary" onclick="app.reassessTargets()">Reassess Now</button>
+                    </div>
+                    <button class="btn-primary" onclick="app.saveSettings()" style="margin-top:1.5rem;">Save Settings</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Meal Picker Modal -->
+    <div class="modal-overlay" id="mealPickerModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Select a Meal</h2>
+                <button class="btn-icon modal-close" onclick="app.closeMealPicker()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="search-input" id="mealSearch" placeholder="Search recipes..." oninput="app.filterMealPicker(this.value)">
+                <div class="meal-picker-list" id="mealPickerList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recipe Detail Modal -->
+    <div class="modal-overlay" id="recipeDetailModal">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h2 id="recipeDetailTitle">Recipe</h2>
+                <button class="btn-icon modal-close" onclick="app.closeRecipeDetail()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body" id="recipeDetailBody"></div>
+        </div>
+    </div>
+
+    <!-- Add Recipe Modal -->
+    <div class="modal-overlay" id="addRecipeModal">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h2>Add New Recipe</h2>
+                <button class="btn-icon modal-close" onclick="app.closeAddRecipeModal()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addRecipeForm" onsubmit="app.addCustomRecipe(event)">
+                    <div class="form-group">
+                        <label>Recipe Name</label>
+                        <input type="text" id="newRecipeName" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="newRecipeCategory">
+                                <option value="breakfast">Breakfast</option>
+                                <option value="lunch">Lunch</option>
+                                <option value="dinner">Dinner</option>
+                                <option value="snack">Snack</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Servings</label>
+                            <input type="number" id="newRecipeServings" value="1" min="1">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Calories (kcal)</label><input type="number" id="newRecipeCalories" required></div>
+                        <div class="form-group"><label>Protein (g)</label><input type="number" id="newRecipeProtein" required></div>
+                        <div class="form-group"><label>Carbs (g)</label><input type="number" id="newRecipeCarbs" required></div>
+                        <div class="form-group"><label>Fat (g)</label><input type="number" id="newRecipeFat" required></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Ingredients (one per line)</label>
+                        <textarea id="newRecipeIngredients" rows="5" placeholder="200g chicken breast&#10;1 tbsp olive oil&#10;..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Instructions</label>
+                        <textarea id="newRecipeInstructions" rows="5" placeholder="Step-by-step cooking instructions..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Storage & Reheating Notes</label>
+                        <textarea id="newRecipeStorage" rows="3" placeholder="How to store and reheat..."></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary" style="width:100%;margin-top:1rem;">Save Recipe</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="recipes.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

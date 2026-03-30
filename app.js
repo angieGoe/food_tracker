@@ -124,7 +124,10 @@ const app = {
     },
 
     getAllRecipes() {
-        return [...RECIPES_DB, ...this.customRecipes];
+        // Custom recipes with _overrides field replace the built-in recipe with that id
+        const overrideIds = new Set(this.customRecipes.filter(r => r._overrides).map(r => r._overrides));
+        const base = RECIPES_DB.filter(r => !overrideIds.has(r.id));
+        return [...base, ...this.customRecipes];
     },
 
     getDayLog(dateKey) {
@@ -374,6 +377,7 @@ const app = {
                 <div class="recipe-storage">${recipe.storage}</div>
             </div>
             <p style="font-size:0.75rem;color:var(--text-light);margin-top:1rem;">Source: ${recipe.source || 'USDA FoodData Central'}</p>
+            <button class="btn-secondary" onclick="app.closeRecipeDetail(); app.openEditRecipeModal('${recipe.id}')" style="margin-top:1rem;width:100%;">Edit Recipe</button>
         `;
 
         document.getElementById('recipeDetailModal').classList.add('active');
@@ -381,6 +385,84 @@ const app = {
 
     closeRecipeDetail() {
         document.getElementById('recipeDetailModal').classList.remove('active');
+    },
+
+    // ========== EDIT RECIPE ==========
+    openEditRecipeModal(recipeId) {
+        const recipe = this.getAllRecipes().find(r => r.id === recipeId);
+        if (!recipe) return;
+
+        document.getElementById('editRecipeId').value = recipe.id;
+        document.getElementById('editRecipeName').value = recipe.name;
+        document.getElementById('editRecipeCategory').value = recipe.category;
+        document.getElementById('editRecipeServings').value = recipe.servings;
+        document.getElementById('editRecipeCalories').value = recipe.calories;
+        document.getElementById('editRecipeProtein').value = recipe.protein;
+        document.getElementById('editRecipeCarbs').value = recipe.carbs;
+        document.getElementById('editRecipeFat').value = recipe.fat;
+        document.getElementById('editRecipeIngredients').value = recipe.ingredients.join('\n');
+        document.getElementById('editRecipeInstructions').value = recipe.instructions.join('\n');
+        document.getElementById('editRecipeStorage').value = recipe.storage || '';
+
+        document.getElementById('editRecipeModal').classList.add('active');
+    },
+
+    closeEditRecipeModal() {
+        document.getElementById('editRecipeModal').classList.remove('active');
+    },
+
+    saveEditedRecipe(e) {
+        e.preventDefault();
+        const id = document.getElementById('editRecipeId').value;
+        const updatedData = {
+            name: document.getElementById('editRecipeName').value,
+            category: document.getElementById('editRecipeCategory').value,
+            servings: parseInt(document.getElementById('editRecipeServings').value),
+            calories: parseFloat(document.getElementById('editRecipeCalories').value),
+            protein: parseFloat(document.getElementById('editRecipeProtein').value),
+            carbs: parseFloat(document.getElementById('editRecipeCarbs').value),
+            fat: parseFloat(document.getElementById('editRecipeFat').value),
+            ingredients: document.getElementById('editRecipeIngredients').value.split('\n').filter(l => l.trim()),
+            instructions: document.getElementById('editRecipeInstructions').value.split('\n').filter(l => l.trim()),
+            storage: document.getElementById('editRecipeStorage').value
+        };
+
+        // Check if it's a built-in recipe — save override to customRecipes
+        const builtInIdx = RECIPES_DB.findIndex(r => r.id === id);
+        const customIdx = this.customRecipes.findIndex(r => r.id === id);
+
+        if (customIdx >= 0) {
+            // Update existing custom recipe
+            Object.assign(this.customRecipes[customIdx], updatedData);
+        } else if (builtInIdx >= 0) {
+            // Override built-in: copy to custom with same id, mark as override
+            const original = RECIPES_DB[builtInIdx];
+            const override = { ...original, ...updatedData, id: id, emoji: original.emoji, _overrides: original.id };
+            this.customRecipes.push(override);
+        }
+
+        this.saveCustomRecipes();
+        this.closeEditRecipeModal();
+        this.renderRecipes();
+        this.renderDashboard();
+        this.showToast('Recipe updated!');
+    },
+
+    deleteRecipe() {
+        const id = document.getElementById('editRecipeId').value;
+        const customIdx = this.customRecipes.findIndex(r => r.id === id);
+
+        if (customIdx >= 0) {
+            this.customRecipes.splice(customIdx, 1);
+            this.saveCustomRecipes();
+            this.closeEditRecipeModal();
+            this.renderRecipes();
+            this.renderDashboard();
+            this.showToast('Recipe deleted.');
+        } else {
+            // It's a built-in recipe — can't delete, but can hide
+            this.showToast('Built-in recipes cannot be deleted, but you can edit them.');
+        }
     },
 
     // ========== RECIPE GRID ==========

@@ -511,23 +511,26 @@ const RECIPES_DB = [
     },
     {
         id: 'w4',
-        name: "David's Protein Bar",
+        name: "David's Protein Bar (Blueberry Pie)",
         category: 'snack',
         emoji: '🍫',
         servings: 1,
-        calories: 180,
-        protein: 16,
-        carbs: 18,
-        fat: 7,
-        fiber: 7,
+        calories: 150,
+        protein: 28,
+        carbs: 14,
+        fat: 1.5,
+        fiber: 2,
         ingredients: [
-            "1 David's Protein Bar"
+            "1 David's Protein Bar (58g)",
+            'Protein system: milk protein isolate, collagen, whey protein concentrate, egg white',
+            'Binding: allulose, polydextrose, glycerin, tapioca starch, soy lecithin',
+            'Gluten free. 0g sugar. 0g added sugars.'
         ],
         instructions: [
             'Unwrap and eat.'
         ],
         storage: 'Store at room temperature. Check expiration date on packaging.',
-        source: 'Product label (estimated — verify against your bar packaging)'
+        source: 'Product label: 150 kcal, 28g protein, 14g carbs, 1.5g fat, 2g fiber'
     },
 
     {

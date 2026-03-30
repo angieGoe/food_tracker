@@ -408,6 +408,64 @@
         </div>
     </div>
 
+    <!-- Edit Recipe Modal -->
+    <div class="modal-overlay" id="editRecipeModal">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h2>Edit Recipe</h2>
+                <button class="btn-icon modal-close" onclick="app.closeEditRecipeModal()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editRecipeForm" onsubmit="app.saveEditedRecipe(event)">
+                    <input type="hidden" id="editRecipeId">
+                    <div class="form-group">
+                        <label>Recipe Name</label>
+                        <input type="text" id="editRecipeName" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="editRecipeCategory">
+                                <option value="breakfast">Breakfast</option>
+                                <option value="lunch">Lunch</option>
+                                <option value="dinner">Dinner</option>
+                                <option value="snack">Snack</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Servings</label>
+                            <input type="number" id="editRecipeServings" value="1" min="1">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Calories (kcal)</label><input type="number" id="editRecipeCalories" required></div>
+                        <div class="form-group"><label>Protein (g)</label><input type="number" id="editRecipeProtein" required step="0.1"></div>
+                        <div class="form-group"><label>Carbs (g)</label><input type="number" id="editRecipeCarbs" required step="0.1"></div>
+                        <div class="form-group"><label>Fat (g)</label><input type="number" id="editRecipeFat" required step="0.1"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Ingredients (one per line)</label>
+                        <textarea id="editRecipeIngredients" rows="5"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Instructions (one step per line)</label>
+                        <textarea id="editRecipeInstructions" rows="5"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Storage & Reheating Notes</label>
+                        <textarea id="editRecipeStorage" rows="3"></textarea>
+                    </div>
+                    <div style="display:flex;gap:0.75rem;margin-top:1rem;">
+                        <button type="submit" class="btn-primary" style="flex:1;">Save Changes</button>
+                        <button type="button" class="btn-secondary" onclick="app.deleteRecipe()" style="color:var(--danger);border-color:var(--danger);">Delete Recipe</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Add Recipe Modal -->
     <div class="modal-overlay" id="addRecipeModal">
         <div class="modal modal-large">

@@ -530,6 +530,86 @@ const RECIPES_DB = [
         source: 'Product label (estimated — verify against your bar packaging)'
     },
 
+    {
+        id: 'w5',
+        name: 'Baked Coconut Red Lentils & Greens + Sausage',
+        category: 'dinner',
+        emoji: '🍛',
+        servings: 5,
+        calories: 559,
+        protein: 30,
+        carbs: 42,
+        fat: 29,
+        fiber: 10,
+        ingredients: [
+            '3 tbsp coconut oil',
+            '1 1/2 tsp ground turmeric, divided',
+            '1 tsp ground allspice',
+            '1/2 tsp ground ginger',
+            '1 (14 oz) can diced tomatoes',
+            'Salt and freshly ground black pepper',
+            '3 cups vegetable or chicken stock',
+            '1 (13.5 oz) can coconut milk',
+            '1 1/4 cups red lentils',
+            '1 medium white onion, halved and sliced',
+            '2 serrano chiles, sliced',
+            '2 tbsp distilled white vinegar',
+            '1 bunch fresh spinach, trimmed and chopped (or 7 oz baby spinach)',
+            '2 sausage links (~150g total, for added protein)'
+        ],
+        instructions: [
+            'Heat oven to 400°F.',
+            'In a Dutch oven or large ovenproof pot, heat coconut oil over medium. Add 1 tsp turmeric, allspice, and ginger and cook 30 seconds until fragrant.',
+            'Stir in diced tomatoes with juices and season with salt and pepper. Cook 3-5 min, stirring occasionally, until reduced to a jammy consistency.',
+            'Add stock, coconut milk, and red lentils. Bring to a boil over high. Season with salt and pepper — it should be flavorful and well seasoned.',
+            'Transfer to oven, uncovered. Bake 20 min until lentils are plump and tender.',
+            'Meanwhile, cook sausage links in a pan until browned and cooked through. Slice.',
+            'While lentils bake, make turmeric-pickled onions: toss sliced onions and chiles with vinegar, a pinch of salt, and remaining 1/2 tsp turmeric. Set aside.',
+            'Once lentils are cooked, add spinach in large handfuls, stirring until wilted.',
+            'Return to oven 8-10 min until stew is slightly more concentrated and lentils are falling apart.',
+            'Serve topped with sliced sausage and spicy pickled onion mixture.'
+        ],
+        storage: 'Fridge up to 4 days. Freezes well (without sausage) for up to 2 months. Reheat on stovetop with a splash of water — it thickens as it sits.',
+        source: 'NYT Cooking — Baked Coconut Red Lentils and Greens. Base: 409 kcal, 17g protein. Sausage adds ~150 kcal, 13g protein per serving.'
+    },
+    {
+        id: 'w6',
+        name: 'Lemon Poppy Seed Pound Cake',
+        category: 'snack',
+        emoji: '🍋',
+        servings: 8,
+        calories: 446,
+        protein: 6,
+        carbs: 57,
+        fat: 22,
+        fiber: 2,
+        ingredients: [
+            'Butter, for greasing pan',
+            '1 3/4 cup all-purpose flour, more for pan',
+            'Zest of 2 lemons',
+            '1 cup sugar',
+            '1/2 cup buttermilk',
+            '3 tbsp plus 4 tsp lemon juice',
+            '3 large eggs',
+            '1 1/2 tsp baking powder',
+            '1/4 tsp baking soda',
+            '1/4 tsp fine sea salt',
+            '2/3 cup extra-virgin olive oil',
+            '1 tbsp poppy seeds',
+            '1/2 cup confectioners\' sugar'
+        ],
+        instructions: [
+            'Heat oven to 350°F. Butter and flour an 8-inch loaf pan.',
+            'In a bowl, combine lemon zest and sugar and rub with your fingers until it looks like wet sand. Whisk in buttermilk, 3 tbsp lemon juice, and eggs.',
+            'In a separate bowl, whisk together flour, baking powder, baking soda, and salt. Whisk dry ingredients into the batter, then whisk in oil and poppy seeds.',
+            'Pour batter into prepared pan. Bake until a toothpick inserted in the center emerges clean, about 1 hour.',
+            'Let cool in pan until warm to the touch, then turn out onto a baking rack set over a rimmed baking sheet. Turn cake right side up.',
+            'Whisk together remaining 4 tsp lemon juice and confectioners\' sugar. Use a pastry brush to spread glaze evenly over top and sides of cake. Cool completely before slicing.'
+        ],
+        storage: 'Store covered at room temperature up to 3 days. Wrap tightly in plastic and freeze up to 1 month. Thaw at room temp.',
+        source: 'NYT Cooking. Per serving (8 servings): 446 kcal, 6g protein, 57g carbs, 22g fat, 2g fiber'
+    },
+
     // ==================== SNACKS ====================
     {
         id: 's1',

@@ -242,9 +242,6 @@ const app = {
 
         // Weekly chart
         this.renderWeeklyChart();
-
-        // Weekly plan
-        this.renderWeeklyPlan();
     },
 
     renderWeeklyPlan() {
@@ -303,9 +300,13 @@ const app = {
 
     goToDay(dateKey) {
         this.currentDate = new Date(dateKey + 'T12:00:00');
+        // Switch to Dashboard page
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        document.querySelector('[data-page="dashboard"]').classList.add('active');
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-dashboard').classList.add('active');
         this.renderDashboard();
-        // Scroll to meal slots
-        document.getElementById('slot-breakfast').scrollIntoView({ behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
     updateRing(elementId, current, target, radius) {
@@ -923,44 +924,18 @@ const app = {
 
     // ========== MEAL PLANNER ==========
     renderMealPlanner() {
+        // Render the weekly plan grid
+        this.renderWeeklyPlan();
+
+        // Render the nutritional overview table
         const container = document.getElementById('plannerContent');
         const today = new Date();
-        const startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - today.getDay());
-        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const allRecipes = this.getAllRecipes();
+        const dayOfWeek = today.getDay();
+        const monday = new Date(today);
+        monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-        let html = '<div class="planner-week">';
-
-        for (let i = 0; i < 7; i++) {
-            const d = new Date(startOfWeek);
-            d.setDate(startOfWeek.getDate() + i);
-            const dk = this.dateKey(d);
-            const dayLog = this.mealLog[dk] || { breakfast: [], lunch: [], dinner: [], snack: [] };
-            const isToday = dk === this.dateKey(new Date());
-            const totals = this.calculateDayTotals(dayLog);
-
-            html += `
-            <div class="planner-day-card">
-                <div class="planner-day-header ${isToday ? 'today' : ''}">${days[i]}<br><span style="font-size:0.75rem;font-weight:400">${d.getDate()}/${d.getMonth()+1}</span></div>
-                ${['breakfast', 'lunch', 'dinner', 'snack'].map(slot => {
-                    const meals = dayLog[slot] || [];
-                    return `<div class="planner-meal-slot">
-                        <h4>${slot}</h4>
-                        ${meals.length > 0 ? meals.map(id => {
-                            const r = allRecipes.find(r => r.id === id);
-                            return r ? `<div class="planner-meal-name">${r.emoji} ${r.name}</div>` : '';
-                        }).join('') : '<div style="color:var(--text-light);font-size:0.75rem">—</div>'}
-                    </div>`;
-                }).join('')}
-                <div style="font-size:0.7rem;text-align:center;margin-top:0.5rem;color:var(--text-light)">${Math.round(totals.calories)} kcal · ${Math.round(totals.protein)}g P</div>
-            </div>`;
-        }
-
-        html += '</div>';
-
-        // Nutritional overview table
-        html += `
+        let html = `
         <div class="meals-nutrition-overview">
             <h2>Nutritional Overview - This Week</h2>
             <table class="nutrition-table">
@@ -971,8 +946,8 @@ const app = {
 
         let weekTotals = { cal: 0, p: 0, c: 0, f: 0, days: 0 };
         for (let i = 0; i < 7; i++) {
-            const d = new Date(startOfWeek);
-            d.setDate(startOfWeek.getDate() + i);
+            const d = new Date(monday);
+            d.setDate(monday.getDate() + i);
             const dk = this.dateKey(d);
             const dayLog = this.mealLog[dk] || { breakfast: [], lunch: [], dinner: [], snack: [] };
             const totals = this.calculateDayTotals(dayLog);

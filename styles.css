@@ -235,7 +235,9 @@ body {
     fill: none;
     stroke-width: 8;
     stroke-linecap: round;
-    transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    stroke-dasharray: 0;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.3s ease;
 }
 
 .ring-fill.calories { stroke: var(--calories); }
@@ -1290,6 +1292,26 @@ body {
 .recipe-card:nth-child(4) { animation-delay: 0.15s; }
 .recipe-card:nth-child(5) { animation-delay: 0.2s; }
 .recipe-card:nth-child(6) { animation-delay: 0.25s; }
+
+/* ========== Star Rating ========== */
+.star-rating {
+    display: inline-flex;
+    gap: 2px;
+}
+
+.star {
+    color: var(--border);
+    transition: color 0.15s ease;
+    user-select: none;
+}
+
+.star.filled {
+    color: #F59E0B;
+}
+
+.star:hover, .star:hover ~ .star {
+    color: #FBBF24;
+}
 
 /* ========== Scrollbar ========== */
 ::-webkit-scrollbar { width: 6px; }

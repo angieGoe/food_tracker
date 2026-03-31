@@ -24,7 +24,7 @@
                 </li>
                 <li class="nav-item" data-page="meals">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
-                    <span>Meals</span>
+                    <span>Meal Planner</span>
                 </li>
                 <li class="nav-item" data-page="recipes">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
@@ -205,7 +205,16 @@
                 <header class="page-header">
                     <div>
                         <h1>Meal Planner</h1>
-                        <p class="subtitle">Your weekly meal plan</p>
+                        <p class="subtitle" id="plannerWeekLabel">Your weekly meal plan</p>
+                    </div>
+                    <div class="date-nav">
+                        <button class="btn-icon" id="prevWeek">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                        </button>
+                        <button class="btn-secondary" id="thisWeekBtn">This Week</button>
+                        <button class="btn-icon" id="nextWeek">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
                     </div>
                 </header>
                 <div class="weekly-plan-section" id="weeklyPlanSection"></div>
@@ -221,6 +230,12 @@
                     </div>
                     <button class="btn-primary" onclick="app.showAddRecipeModal()">+ Add Recipe</button>
                 </header>
+                <div class="favorites-section" id="favoritesSection" style="display:none;">
+                    <h2 style="font-size:1.125rem;margin-bottom:1rem;">Favorite Recipes</h2>
+                    <div class="recipe-grid" id="favoritesGrid"></div>
+                    <hr style="margin:2rem 0;border:none;border-top:1px solid var(--border);">
+                    <h2 style="font-size:1.125rem;margin-bottom:1rem;">All Recipes</h2>
+                </div>
                 <div class="recipe-filters">
                     <button class="filter-btn active" data-filter="all">All</button>
                     <button class="filter-btn" data-filter="breakfast">Breakfast</button>
@@ -475,6 +490,15 @@
                 </button>
             </div>
             <div class="modal-body">
+                <div class="import-url-section">
+                    <label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.3px;display:block;margin-bottom:0.35rem;">Import from URL</label>
+                    <div style="display:flex;gap:0.5rem;">
+                        <input type="text" id="importRecipeUrl" class="search-input" placeholder="Paste a recipe URL..." style="margin-bottom:0;">
+                        <button type="button" class="btn-primary btn-sm" onclick="app.importFromUrl()" id="importUrlBtn">Import</button>
+                    </div>
+                    <p id="importUrlStatus" style="font-size:0.75rem;color:var(--text-light);margin-top:0.35rem;">Paste a link to auto-fill recipe details. You can edit any fields after.</p>
+                    <hr style="margin:1rem 0;border:none;border-top:1px solid var(--border);">
+                </div>
                 <form id="addRecipeForm" onsubmit="app.addCustomRecipe(event)">
                     <div class="form-group">
                         <label>Recipe Name</label>
@@ -515,6 +539,22 @@
                     </div>
                     <button type="submit" class="btn-primary" style="width:100%;margin-top:1rem;">Save Recipe</button>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pantry Suggestions Modal -->
+    <div class="modal-overlay" id="pantrySuggestionsModal">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h2>Pantry Recipe Suggestions</h2>
+                <button class="btn-icon modal-close" onclick="app.closePantrySuggestions()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p style="color:var(--text-secondary);margin-bottom:1rem;">Based on what's in your pantry, here are some recipes you can make:</p>
+                <div id="pantrySuggestionsList"></div>
             </div>
         </div>
     </div>

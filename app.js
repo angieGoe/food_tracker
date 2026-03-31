@@ -7,6 +7,8 @@ const app = {
     settings: null,
     mealLog: {},      // { 'YYYY-MM-DD': { breakfast: [...], lunch: [...], dinner: [...], snack: [...] } }
     customRecipes: [],
+    ratings: {},         // { recipeId: 1-5 }
+    plannerWeekOffset: 0, // 0 = this week, -1 = last week, +1 = next week
 
     // ========== INIT ==========
     init() {
@@ -14,9 +16,11 @@ const app = {
         this.loadMealLog();
         this.loadCustomRecipes();
         this.loadHiddenRecipes();
+        this.loadRatings();
         this.populateWeeklyPlan();
         this.setupNavigation();
         this.setupDateNav();
+        this.setupWeekNav();
         this.renderDashboard();
         this.renderRecipes();
         this.renderPantry();
@@ -158,6 +162,36 @@ const app = {
         this.hiddenRecipes = saved ? JSON.parse(saved) : [];
     },
 
+    loadRatings() {
+        const saved = localStorage.getItem('ft_ratings');
+        this.ratings = saved ? JSON.parse(saved) : {};
+    },
+
+    saveRatings() {
+        localStorage.setItem('ft_ratings', JSON.stringify(this.ratings));
+    },
+
+    setRating(recipeId, stars) {
+        this.ratings[recipeId] = stars;
+        this.saveRatings();
+        this.renderRecipes();
+        // Re-render detail modal if open
+        const detailModal = document.getElementById('recipeDetailModal');
+        if (detailModal.classList.contains('active')) {
+            this.showRecipeDetail(recipeId);
+        }
+    },
+
+    renderStars(recipeId, size = 16) {
+        const rating = this.ratings[recipeId] || 0;
+        let html = '<span class="star-rating">';
+        for (let i = 1; i <= 5; i++) {
+            html += `<span class="star ${i <= rating ? 'filled' : ''}" onclick="event.stopPropagation(); app.setRating('${recipeId}', ${i})" style="cursor:pointer;font-size:${size}px;">${i <= rating ? '★' : '☆'}</span>`;
+        }
+        html += '</span>';
+        return html;
+    },
+
     getAllRecipes() {
         const hidden = new Set(this.hiddenRecipes || []);
         const overrideIds = new Set(this.customRecipes.filter(r => r._overrides).map(r => r._overrides));
@@ -202,6 +236,21 @@ const app = {
         document.getElementById('todayBtn').addEventListener('click', () => {
             this.currentDate = new Date();
             this.renderDashboard();
+        });
+    },
+
+    setupWeekNav() {
+        document.getElementById('prevWeek').addEventListener('click', () => {
+            this.plannerWeekOffset--;
+            this.renderMealPlanner();
+        });
+        document.getElementById('nextWeek').addEventListener('click', () => {
+            this.plannerWeekOffset++;
+            this.renderMealPlanner();
+        });
+        document.getElementById('thisWeekBtn').addEventListener('click', () => {
+            this.plannerWeekOffset = 0;
+            this.renderMealPlanner();
         });
     },
 
@@ -254,16 +303,27 @@ const app = {
     renderWeeklyPlan() {
         const container = document.getElementById('weeklyPlanSection');
         const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-        const daysFull = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
         const allRecipes = this.getAllRecipes();
 
-        // Find the Monday of the current week
-        const today = new Date(this.currentDate);
-        const dayOfWeek = today.getDay();
-        const monday = new Date(today);
-        monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
+        // Find the Monday of the target week (offset from current week)
+        const now = new Date();
+        const dayOfWeek = now.getDay();
+        const monday = new Date(now);
+        monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7) + (this.plannerWeekOffset * 7));
 
-        let html = '<h2>This Week\'s Meal Plan</h2><div class="weekly-plan-grid">';
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+
+        // Update week label
+        const weekLabel = document.getElementById('plannerWeekLabel');
+        if (this.plannerWeekOffset === 0) {
+            weekLabel.textContent = 'This week';
+        } else {
+            const fmt = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            weekLabel.textContent = `${fmt(monday)} — ${fmt(sunday)}`;
+        }
+
+        let html = '<div class="weekly-plan-grid">';
 
         for (let i = 0; i < 7; i++) {
             const d = new Date(monday);
@@ -319,14 +379,16 @@ const app = {
     updateRing(elementId, current, target, radius) {
         const el = document.getElementById(elementId);
         const circumference = 2 * Math.PI * radius;
-        const progress = Math.min(current / target, 1.2);
+        // Cap at 100% visually (full circle), allow up to 100%
+        const pct = target > 0 ? current / target : 0;
+        const progress = Math.min(pct, 1); // max = full circle
         const offset = circumference - (progress * circumference);
         el.style.strokeDasharray = circumference;
         el.style.strokeDashoffset = offset;
 
         // Protein over target = green (good!), calories over = red (warning)
         el.style.stroke = '';
-        if (current > target * 1.05) {
+        if (pct > 1.05) {
             if (elementId === 'proteinRingFill') {
                 el.style.stroke = '#22C55E'; // green — hitting protein is great
             } else if (elementId === 'calorieRingFill') {
@@ -469,6 +531,7 @@ const app = {
                 <span class="macro-badge carbs">${Math.round(recipe.carbs * factor)}g carbs</span>
                 <span class="macro-badge fat">${Math.round(recipe.fat * factor)}g fat</span>
             </div>
+            <div style="margin-bottom:1rem;">${this.renderStars(recipe.id, 22)}</div>
             ${recipe.servings > 1 ? `<p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:1rem;">Recipe makes ${recipe.servings} servings. Macros shown per serving.</p>` : ''}
             <div class="recipe-detail-section">
                 <h3>Ingredients</h3>
@@ -585,34 +648,50 @@ const app = {
     },
 
     // ========== RECIPE GRID ==========
+    renderRecipeCard(r) {
+        const factor = 1 / r.servings;
+        const rating = this.ratings[r.id] || 0;
+        return `
+        <div class="recipe-card" onclick="app.showRecipeDetail('${r.id}')">
+            <div class="recipe-card-image ${r.category}-bg">
+                <span>${r.emoji}</span>
+                <span class="recipe-card-category">${r.category}</span>
+            </div>
+            <div class="recipe-card-body">
+                <h3>${r.name}</h3>
+                <div class="recipe-macros">
+                    <span class="macro-badge protein">${Math.round(r.protein * factor)}g P</span>
+                    <span class="macro-badge carbs">${Math.round(r.carbs * factor)}g C</span>
+                    <span class="macro-badge fat">${Math.round(r.fat * factor)}g F</span>
+                    <span class="macro-badge calories">${Math.round(r.calories * factor)} kcal</span>
+                </div>
+                ${rating > 0 ? `<div style="margin-top:0.5rem;">${this.renderStars(r.id, 14)}</div>` : ''}
+            </div>
+            <div class="recipe-card-footer">
+                <span>${r.servings > 1 ? r.servings + ' servings' : '1 serving'}</span>
+                <span>${r.ingredients.length} ingredients</span>
+            </div>
+        </div>`;
+    },
+
     renderRecipes(filter = 'all') {
         const grid = document.getElementById('recipeGrid');
         const allRecipes = this.getAllRecipes();
         const filtered = filter === 'all' ? allRecipes : allRecipes.filter(r => r.category === filter);
 
-        grid.innerHTML = filtered.map(r => {
-            const factor = 1 / r.servings;
-            return `
-            <div class="recipe-card" onclick="app.showRecipeDetail('${r.id}')">
-                <div class="recipe-card-image ${r.category}-bg">
-                    <span>${r.emoji}</span>
-                    <span class="recipe-card-category">${r.category}</span>
-                </div>
-                <div class="recipe-card-body">
-                    <h3>${r.name}</h3>
-                    <div class="recipe-macros">
-                        <span class="macro-badge protein">${Math.round(r.protein * factor)}g P</span>
-                        <span class="macro-badge carbs">${Math.round(r.carbs * factor)}g C</span>
-                        <span class="macro-badge fat">${Math.round(r.fat * factor)}g F</span>
-                        <span class="macro-badge calories">${Math.round(r.calories * factor)} kcal</span>
-                    </div>
-                </div>
-                <div class="recipe-card-footer">
-                    <span>${r.servings > 1 ? r.servings + ' servings' : '1 serving'}</span>
-                    <span>${r.ingredients.length} ingredients</span>
-                </div>
-            </div>`;
-        }).join('');
+        grid.innerHTML = filtered.map(r => this.renderRecipeCard(r)).join('');
+
+        // Render favorites section
+        const favSection = document.getElementById('favoritesSection');
+        const favGrid = document.getElementById('favoritesGrid');
+        const favorites = allRecipes.filter(r => (this.ratings[r.id] || 0) >= 4);
+
+        if (favorites.length > 0) {
+            favSection.style.display = 'block';
+            favGrid.innerHTML = favorites.map(r => this.renderRecipeCard(r)).join('');
+        } else {
+            favSection.style.display = 'none';
+        }
     },
 
     // ========== ADD CUSTOM RECIPE ==========
@@ -940,6 +1019,8 @@ const app = {
 
     syncPantry() {
         this.showToast('Pantry synced with your Notion page!');
+        // Show pantry-based recipe suggestions
+        setTimeout(() => this.showPantrySuggestions(), 500);
     },
 
     // ========== MEAL PLANNER ==========
@@ -949,15 +1030,15 @@ const app = {
 
         // Render the nutritional overview table
         const container = document.getElementById('plannerContent');
-        const today = new Date();
-        const dayOfWeek = today.getDay();
-        const monday = new Date(today);
-        monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
+        const now = new Date();
+        const dayOfWeek = now.getDay();
+        const monday = new Date(now);
+        monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7) + (this.plannerWeekOffset * 7));
         const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
         let html = `
         <div class="meals-nutrition-overview">
-            <h2>Nutritional Overview - This Week</h2>
+            <h2>Nutritional Overview${this.plannerWeekOffset === 0 ? ' - This Week' : ''}</h2>
             <table class="nutrition-table">
                 <thead>
                     <tr><th>Day</th><th>Calories</th><th>Protein</th><th>Carbs</th><th>Fat</th><th>Status</th></tr>
@@ -1005,6 +1086,218 @@ const app = {
 
         html += '</tbody></table></div>';
         container.innerHTML = html;
+    },
+
+    // ========== IMPORT FROM URL ==========
+    async importFromUrl() {
+        const urlInput = document.getElementById('importRecipeUrl');
+        const statusEl = document.getElementById('importUrlStatus');
+        const btn = document.getElementById('importUrlBtn');
+        const url = urlInput.value.trim();
+
+        if (!url) {
+            statusEl.textContent = 'Please paste a URL first.';
+            statusEl.style.color = 'var(--danger)';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Loading...';
+        statusEl.textContent = 'Fetching recipe data...';
+        statusEl.style.color = 'var(--text-light)';
+
+        try {
+            // Try fetching via a CORS proxy or directly
+            const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
+            const html = await response.text();
+
+            // Parse the HTML for common recipe metadata (JSON-LD, meta tags)
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            let recipe = null;
+
+            // Try JSON-LD first (most recipe sites use this)
+            const jsonLdScripts = doc.querySelectorAll('script[type="application/ld+json"]');
+            for (const script of jsonLdScripts) {
+                try {
+                    let data = JSON.parse(script.textContent);
+                    if (Array.isArray(data)) data = data[0];
+                    if (data['@graph']) data = data['@graph'].find(item => item['@type'] === 'Recipe' || (Array.isArray(item['@type']) && item['@type'].includes('Recipe'))) || data;
+                    if (data['@type'] === 'Recipe' || (Array.isArray(data['@type']) && data['@type'].includes('Recipe'))) {
+                        recipe = data;
+                        break;
+                    }
+                } catch (e) { /* skip invalid JSON */ }
+            }
+
+            if (recipe) {
+                // Fill in the form fields
+                document.getElementById('newRecipeName').value = recipe.name || '';
+                if (recipe.recipeIngredient) {
+                    document.getElementById('newRecipeIngredients').value = recipe.recipeIngredient.join('\n');
+                }
+                if (recipe.recipeInstructions) {
+                    const instructions = recipe.recipeInstructions.map(step => {
+                        if (typeof step === 'string') return step;
+                        return step.text || step.name || '';
+                    }).filter(Boolean);
+                    document.getElementById('newRecipeInstructions').value = instructions.join('\n');
+                }
+                // Try to extract yield/servings
+                if (recipe.recipeYield) {
+                    const yieldNum = parseInt(String(recipe.recipeYield).replace(/[^\d]/g, ''));
+                    if (yieldNum > 0) document.getElementById('newRecipeServings').value = yieldNum;
+                }
+                // Try to extract nutrition
+                if (recipe.nutrition) {
+                    const n = recipe.nutrition;
+                    const parseNum = (val) => parseInt(String(val || '0').replace(/[^\d.]/g, '')) || 0;
+                    if (n.calories) document.getElementById('newRecipeCalories').value = parseNum(n.calories);
+                    if (n.proteinContent) document.getElementById('newRecipeProtein').value = parseNum(n.proteinContent);
+                    if (n.carbohydrateContent) document.getElementById('newRecipeCarbs').value = parseNum(n.carbohydrateContent);
+                    if (n.fatContent) document.getElementById('newRecipeFat').value = parseNum(n.fatContent);
+                }
+
+                statusEl.textContent = 'Recipe imported! Review and fill in any missing fields, then save.';
+                statusEl.style.color = 'var(--success)';
+            } else {
+                // Fallback: try to get the page title at least
+                const title = doc.querySelector('title');
+                if (title) document.getElementById('newRecipeName').value = title.textContent.trim().split('|')[0].split('-')[0].trim();
+                statusEl.textContent = 'Could not extract full recipe data. Please fill in the fields manually.';
+                statusEl.style.color = 'var(--warning)';
+            }
+        } catch (err) {
+            statusEl.textContent = 'Failed to fetch URL. Please fill in the recipe manually.';
+            statusEl.style.color = 'var(--danger)';
+        }
+
+        btn.disabled = false;
+        btn.textContent = 'Import';
+    },
+
+    // ========== PANTRY SUGGESTIONS ==========
+    generatePantrySuggestions() {
+        // Get all pantry items as a flat lower-case list
+        const pantryItems = Object.values(PANTRY_DATA).flatMap(s => s.items.map(i => i.toLowerCase()));
+
+        // Define suggestion templates using common pantry ingredients
+        const suggestions = [
+            {
+                name: 'Lentil & Potato Curry',
+                emoji: '🍛',
+                category: 'dinner',
+                servings: 2,
+                calories: 460, protein: 22, carbs: 58, fat: 14,
+                ingredients: ['1 cup lentils', '2 medium potatoes, cubed', '1 can coconut milk', '1 tbsp coconut oil', '1 tsp turmeric', '1 tsp garam masala', '1 tsp curry powder', '1/2 tsp ginger powder', '2 cloves garlic, minced', 'Salt and pepper to taste', 'Fresh parsley'],
+                instructions: ['Cook lentils until tender, about 20 min.', 'Boil potatoes until fork-tender.', 'Heat coconut oil, add garlic and spices, cook 30s.', 'Add coconut milk and simmer 5 min.', 'Add lentils and potatoes, simmer 10 min.', 'Season and serve with parsley.'],
+                storage: 'Fridge up to 4 days. Reheat on stovetop.'
+            },
+            {
+                name: 'Garlic Egg Fried Rice',
+                emoji: '🍳',
+                category: 'lunch',
+                servings: 1,
+                calories: 420, protein: 18, carbs: 52, fat: 16,
+                ingredients: ['1 cup cooked basmati rice', '2 large eggs', '1 tbsp soy sauce', '1 tsp toasted sesame oil', '2 cloves garlic, minced', '1 tbsp safflower oil', 'Salt and pepper'],
+                instructions: ['Heat safflower oil in a pan over high heat.', 'Sauté garlic 30s until fragrant.', 'Add cold rice and stir-fry 3 min.', 'Push rice aside, scramble eggs in the pan.', 'Mix everything together, add soy sauce and sesame oil.', 'Season and serve.'],
+                storage: 'Best fresh. Leftovers fridge 1-2 days.'
+            },
+            {
+                name: 'Chickpea & Avocado Bowl',
+                emoji: '🥑',
+                category: 'lunch',
+                servings: 1,
+                calories: 480, protein: 20, carbs: 45, fat: 24,
+                ingredients: ['1 cup cooked chickpeas', '1/2 avocado', '1 tbsp tahini', '1 tbsp olive oil', '1 tbsp lemon or lime juice', '1 tsp cumin', 'Salt and pepper', 'Cherry tomatoes (if available)'],
+                instructions: ['Warm chickpeas in a pan with olive oil and cumin.', 'Mash avocado with lime juice and salt.', 'Bowl: chickpeas, avocado mash, drizzle tahini.', 'Season with salt and pepper.'],
+                storage: 'Eat fresh. Do not store avocado mash.'
+            },
+            {
+                name: 'Oat & Banana Cookies',
+                emoji: '🍪',
+                category: 'snack',
+                servings: 6,
+                calories: 900, protein: 18, carbs: 120, fat: 36,
+                ingredients: ['1 cup rolled oats', '2 ripe bananas, mashed', '2 tbsp almond butter', '2 tbsp raw honey', '1 tbsp cacao powder', '1/2 tsp cinnamon', 'Pinch of salt'],
+                instructions: ['Preheat oven to 350°F.', 'Mash bananas and mix with all ingredients.', 'Scoop tablespoon-sized balls onto a lined baking sheet.', 'Flatten slightly and bake 12-15 min.', 'Cool before serving.'],
+                storage: 'Room temp 2 days, fridge 1 week, freezer 1 month.'
+            }
+        ];
+
+        // Check which suggestions can be made with pantry
+        return suggestions.map(s => {
+            const matchCount = s.ingredients.filter(ing => this.checkPantry(ing)).length;
+            const matchPct = Math.round((matchCount / s.ingredients.length) * 100);
+            return { ...s, matchCount, matchPct, totalIngredients: s.ingredients.length };
+        }).sort((a, b) => b.matchPct - a.matchPct);
+    },
+
+    showPantrySuggestions() {
+        const suggestions = this.generatePantrySuggestions();
+        // Show 3 meals + 1 dessert/snack
+        const meals = suggestions.filter(s => s.category !== 'snack').slice(0, 3);
+        const dessert = suggestions.filter(s => s.category === 'snack').slice(0, 1);
+        const toShow = [...meals, ...dessert];
+
+        const container = document.getElementById('pantrySuggestionsList');
+        container.innerHTML = toShow.map((s, i) => {
+            const factor = 1 / s.servings;
+            const missingItems = s.ingredients.filter(ing => !this.checkPantry(ing));
+            return `
+            <div class="pantry-suggestion-card" style="background:var(--bg-primary);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;border:1px solid var(--border);">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+                    <h3 style="font-size:1rem;">${s.emoji} ${s.name}</h3>
+                    <span class="macro-badge ${s.category === 'snack' ? 'carbs' : 'protein'}" style="text-transform:capitalize;">${s.category === 'snack' ? 'Dessert' : s.category}</span>
+                </div>
+                <div style="display:flex;gap:0.75rem;margin-bottom:0.75rem;flex-wrap:wrap;">
+                    <span class="macro-badge protein">${Math.round(s.protein * factor)}g P/serving</span>
+                    <span class="macro-badge calories">${Math.round(s.calories * factor)} kcal/serving</span>
+                    <span style="font-size:0.8rem;color:var(--success);font-weight:600;">${s.matchPct}% pantry match</span>
+                </div>
+                ${missingItems.length > 0 ? `<p style="font-size:0.75rem;color:var(--text-light);margin-bottom:0.75rem;">Missing: ${missingItems.join(', ')}</p>` : '<p style="font-size:0.75rem;color:var(--success);margin-bottom:0.75rem;">All ingredients in pantry!</p>'}
+                <button class="btn-primary btn-sm" onclick="app.acceptPantrySuggestion(${i})">Add to Recipe Library</button>
+            </div>`;
+        }).join('');
+
+        this._pantrySuggestions = toShow;
+        document.getElementById('pantrySuggestionsModal').classList.add('active');
+    },
+
+    closePantrySuggestions() {
+        document.getElementById('pantrySuggestionsModal').classList.remove('active');
+    },
+
+    acceptPantrySuggestion(index) {
+        const s = this._pantrySuggestions[index];
+        if (!s) return;
+        const recipe = {
+            id: 'pantry_' + Date.now() + '_' + index,
+            name: s.name,
+            category: s.category,
+            emoji: s.emoji,
+            servings: s.servings,
+            calories: s.calories,
+            protein: s.protein,
+            carbs: s.carbs,
+            fat: s.fat,
+            fiber: 0,
+            ingredients: s.ingredients,
+            instructions: s.instructions,
+            storage: s.storage,
+            source: 'Pantry suggestion'
+        };
+        this.customRecipes.push(recipe);
+        this.saveCustomRecipes();
+        this.renderRecipes();
+        this.showToast(`${s.name} added to your recipe library!`);
+        // Update the button to show it was added
+        const btn = document.querySelectorAll('.pantry-suggestion-card')[index]?.querySelector('button');
+        if (btn) {
+            btn.textContent = 'Added!';
+            btn.disabled = true;
+            btn.style.background = 'var(--success)';
+        }
     },
 
     // ========== HELPERS ==========

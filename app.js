@@ -13,6 +13,7 @@ const app = {
         this.loadSettings();
         this.loadMealLog();
         this.loadCustomRecipes();
+        this.populateWeeklyPlan();
         this.setupNavigation();
         this.setupDateNav();
         this.renderDashboard();
@@ -23,6 +24,34 @@ const app = {
         this.renderMealPlanner();
         this.checkReassessment();
         this.setupFilterButtons();
+    },
+
+    // ========== WEEKLY MEAL PLAN ==========
+    populateWeeklyPlan() {
+        // Auto-populate this week (Mon Mar 31 - Sun Apr 6, 2026) if not already set
+        const weekPlan = {
+            '2026-03-31': { breakfast: ['b1'], lunch: ['w1'], dinner: ['w5'], snack: ['w4'] },
+            '2026-04-01': { breakfast: ['b4'], lunch: ['l2'], dinner: ['w2'], snack: ['w3'] },
+            '2026-04-02': { breakfast: ['b2'], lunch: ['w1'], dinner: ['d3'], snack: ['w4'] },
+            '2026-04-03': { breakfast: ['b3'], lunch: ['l1'], dinner: ['w5'], snack: ['w4'] },
+            '2026-04-04': { breakfast: ['b1'], lunch: ['l2'], dinner: ['w2'], snack: ['w3'] },
+            '2026-04-05': { breakfast: ['b2'], lunch: ['w1'], dinner: ['d1'], snack: ['w4'] },
+            '2026-04-06': { breakfast: ['b4'], lunch: ['w1'], dinner: ['d2'], snack: ['w4'] },
+        };
+
+        let populated = false;
+        for (const [date, meals] of Object.entries(weekPlan)) {
+            if (!this.mealLog[date] || (
+                this.mealLog[date].breakfast.length === 0 &&
+                this.mealLog[date].lunch.length === 0 &&
+                this.mealLog[date].dinner.length === 0 &&
+                this.mealLog[date].snack.length === 0
+            )) {
+                this.mealLog[date] = meals;
+                populated = true;
+            }
+        }
+        if (populated) this.saveMealLog();
     },
 
     // ========== SETTINGS ==========
@@ -213,6 +242,70 @@ const app = {
 
         // Weekly chart
         this.renderWeeklyChart();
+
+        // Weekly plan
+        this.renderWeeklyPlan();
+    },
+
+    renderWeeklyPlan() {
+        const container = document.getElementById('weeklyPlanSection');
+        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const daysFull = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const allRecipes = this.getAllRecipes();
+
+        // Find the Monday of the current week
+        const today = new Date(this.currentDate);
+        const dayOfWeek = today.getDay();
+        const monday = new Date(today);
+        monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
+
+        let html = '<h2>This Week\'s Meal Plan</h2><div class="weekly-plan-grid">';
+
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(monday);
+            d.setDate(monday.getDate() + i);
+            const dk = this.dateKey(d);
+            const isToday = dk === this.dateKey(new Date());
+            const dayLog = this.mealLog[dk] || { breakfast: [], lunch: [], dinner: [], snack: [] };
+            const totals = this.calculateDayTotals(dayLog);
+            const proteinOk = totals.protein >= this.settings.protein * 0.9;
+
+            const getMealName = (slot) => {
+                const ids = dayLog[slot] || [];
+                if (ids.length === 0) return '<span style="color:var(--text-light)">—</span>';
+                return ids.map(id => {
+                    const r = allRecipes.find(r => r.id === id);
+                    return r ? `${r.emoji} ${r.name}` : '?';
+                }).join('<br>');
+            };
+
+            html += `
+            <div class="wp-day ${isToday ? 'wp-today' : ''}" onclick="app.goToDay('${dk}')">
+                <div class="wp-day-header ${isToday ? 'wp-today-header' : ''}">
+                    ${days[i]}
+                    <span class="wp-day-date">${d.getDate()}/${d.getMonth() + 1}</span>
+                </div>
+                <div class="wp-meal"><div class="wp-meal-label">Breakfast</div><div class="wp-meal-name">${getMealName('breakfast')}</div></div>
+                <div class="wp-meal"><div class="wp-meal-label">Lunch</div><div class="wp-meal-name">${getMealName('lunch')}</div></div>
+                <div class="wp-meal"><div class="wp-meal-label">Dinner</div><div class="wp-meal-name">${getMealName('dinner')}</div></div>
+                <div class="wp-meal"><div class="wp-meal-label">Snack</div><div class="wp-meal-name">${getMealName('snack')}</div></div>
+                <div class="wp-day-totals">
+                    <span class="wp-kcal">${Math.round(totals.calories)} kcal</span><br>
+                    <span class="wp-protein">${Math.round(totals.protein)}g P</span>
+                    <span class="wp-status ${proteinOk ? 'on-track' : 'under'}"></span>
+                </div>
+            </div>`;
+        }
+
+        html += '</div>';
+        container.innerHTML = html;
+    },
+
+    goToDay(dateKey) {
+        this.currentDate = new Date(dateKey + 'T12:00:00');
+        this.renderDashboard();
+        // Scroll to meal slots
+        document.getElementById('slot-breakfast').scrollIntoView({ behavior: 'smooth' });
     },
 
     updateRing(elementId, current, target, radius) {
@@ -577,6 +670,28 @@ const app = {
     },
 
     // ========== SHOPPING LIST ==========
+    checkPantry(ingredientText) {
+        // Smart pantry matching — checks if an ingredient is likely covered by pantry items
+        const lower = ingredientText.toLowerCase();
+        const allPantryItems = Object.values(PANTRY_DATA).flatMap(s => s.items);
+
+        // Keywords to match against pantry
+        const pantryKeywords = allPantryItems.map(p => p.toLowerCase().replace(/\s*\(.*\)/, '').replace(/\s*\d+x?\s*$/, '').trim());
+
+        for (const keyword of pantryKeywords) {
+            // Exact word match within the ingredient text
+            if (lower.includes(keyword)) return true;
+            // Match key words (e.g. "olive oil" matches "1 tbsp olive oil")
+            const words = keyword.split(' ');
+            if (words.length >= 2 && words.every(w => lower.includes(w))) return true;
+        }
+
+        // Also match generic spice/seasoning lines
+        if (/^(salt|pepper|pinch|to taste|kosher|freshly ground)/i.test(lower.replace(/^[\d\s\/½¼¾⅓⅔]+\s*(tsp|tbsp|teaspoon|tablespoon)?\s*/i, ''))) return true;
+
+        return false;
+    },
+
     renderShoppingList() {
         const container = document.getElementById('shoppingListContent');
         const shoppingData = this.generateShoppingData();
@@ -595,49 +710,72 @@ const app = {
             'Dairy & Eggs': { icon: '🥛', items: [] },
             'Grains & Pasta': { icon: '🌾', items: [] },
             'Canned & Dry Goods': { icon: '🥫', items: [] },
-            'Condiments': { icon: '🫙', items: [] },
+            'Condiments & Pantry': { icon: '🫙', items: [] },
             'Other': { icon: '🛒', items: [] }
         };
 
-        // Categorize ingredients
-        const pantryItems = Object.values(PANTRY_DATA).flatMap(s => s.items.map(i => i.toLowerCase()));
+        let toBuyCount = 0;
+        let inPantryCount = 0;
 
         for (const [item, sources] of Object.entries(shoppingData)) {
-            const lower = item.toLowerCase();
-            const inPantry = pantryItems.some(p => lower.includes(p.toLowerCase()) || p.toLowerCase().includes(lower.split(' ').pop()));
+            const inPantry = this.checkPantry(item);
+            if (inPantry) inPantryCount++; else toBuyCount++;
 
             let section = 'Other';
-            if (/chicken|turkey|salmon|shrimp|tuna|beef|pork/i.test(item)) section = 'Protein & Seafood';
-            else if (/egg|yogurt|cheese|milk|butter|cottage/i.test(item)) section = 'Dairy & Eggs';
-            else if (/avocado|tomato|broccoli|onion|garlic|lime|banana|blackberr|sprout|potato|corn|bean sprout|greens|jalapeñ/i.test(item)) section = 'Produce';
-            else if (/rice|pasta|noodle|oat|flour|bread|toast|lentil|chickpea|bean/i.test(item)) section = 'Grains & Pasta';
-            else if (/canned|black bean/i.test(item)) section = 'Canned & Dry Goods';
-            else if (/sauce|mustard|mayo|vinegar|oil|tahini|paste|honey|spice|season|powder|salt|pepper|cumin|garam|turmeric|cinnamon|furikake|achiote|soy|fish sauce|capers/i.test(item)) section = 'Condiments';
+            if (/chicken|turkey|salmon|shrimp|tuna|beef|pork|sausage/i.test(item)) section = 'Protein & Seafood';
+            else if (/egg|yogurt|cheese|milk|butter|cottage|cream|half and half|buttermilk/i.test(item)) section = 'Dairy & Eggs';
+            else if (/avocado|tomato|broccoli|onion|garlic|lime|lemon|banana|blackberr|sprout|potato|corn|bean sprout|greens|jalapeñ|serrano|spinach|kale|romaine|lettuce|cherry/i.test(item)) section = 'Produce';
+            else if (/rice|pasta|noodle|oat|flour|bread|toast|lentil|chickpea|bean|gnocchi/i.test(item)) section = 'Grains & Pasta';
+            else if (/canned|can\b|stock|broth|coconut milk|diced tomato/i.test(item)) section = 'Canned & Dry Goods';
+            else if (/sauce|mustard|mayo|vinegar|oil|tahini|paste|honey|spice|season|powder|salt|pepper|cumin|garam|turmeric|cinnamon|furikake|achiote|soy|fish sauce|capers|worcestershire|poppy seed|vanilla|baking|sugar|confectioner|allspice|ginger|chia/i.test(item)) section = 'Condiments & Pantry';
 
             sections[section].items.push({ name: item, sources, inPantry });
         }
 
-        container.innerHTML = Object.entries(sections)
+        // Sort: items to buy first, pantry items last
+        for (const section of Object.values(sections)) {
+            section.items.sort((a, b) => a.inPantry - b.inPantry);
+        }
+
+        let html = `
+            <div style="display:flex;gap:1rem;margin-bottom:1.5rem;">
+                <div class="stat-card" style="flex:1;padding:1rem;">
+                    <h3 style="margin:0">To Buy</h3>
+                    <span class="stat-value" style="font-size:1.5rem;color:var(--accent)">${toBuyCount}</span>
+                    <span class="stat-unit">items</span>
+                </div>
+                <div class="stat-card" style="flex:1;padding:1rem;">
+                    <h3 style="margin:0">In Pantry</h3>
+                    <span class="stat-value" style="font-size:1.5rem;color:var(--success)">${inPantryCount}</span>
+                    <span class="stat-unit">items (already have)</span>
+                </div>
+            </div>`;
+
+        html += Object.entries(sections)
             .filter(([, s]) => s.items.length > 0)
-            .map(([name, s]) => `
+            .map(([name, s]) => {
+                const buyCount = s.items.filter(i => !i.inPantry).length;
+                return `
                 <div class="shopping-section">
                     <div class="shopping-section-header">
                         <span class="shopping-section-icon">${s.icon}</span>
                         <h3>${name}</h3>
-                        <span style="font-size:0.8rem;color:var(--text-light);margin-left:auto">${s.items.length} items</span>
+                        <span style="font-size:0.8rem;color:var(--text-light);margin-left:auto">${buyCount > 0 ? buyCount + ' to buy' : 'all in pantry'}</span>
                     </div>
                     <div class="shopping-items">
                         ${s.items.map((item, i) => `
-                            <div class="shopping-item" id="shop-${name}-${i}">
+                            <div class="shopping-item ${item.inPantry ? 'checked' : ''}" id="shop-${name.replace(/\s/g,'')}-${i}">
                                 <input type="checkbox" ${item.inPantry ? 'checked' : ''} onchange="this.parentElement.classList.toggle('checked')">
                                 <label>${item.name}</label>
-                                ${item.inPantry ? '<span class="item-source">In pantry</span>' : ''}
+                                ${item.inPantry ? '<span class="item-source" style="background:var(--calories-light);color:var(--calories)">In pantry</span>' : '<span class="item-source" style="background:var(--protein-light);color:var(--protein)">Buy</span>'}
                                 <span class="item-source">${item.sources.join(', ')}</span>
                             </div>
                         `).join('')}
                     </div>
-                </div>
-            `).join('');
+                </div>`;
+            }).join('');
+
+        container.innerHTML = html;
     },
 
     generateShoppingList() {
@@ -649,7 +787,7 @@ const app = {
         const ingredientMap = {};
         const allRecipes = this.getAllRecipes();
 
-        // Gather all recipes used in the next 7 days
+        // Gather all recipes used in the next 7 days from today
         const today = new Date();
         for (let i = 0; i < 7; i++) {
             const d = new Date(today);

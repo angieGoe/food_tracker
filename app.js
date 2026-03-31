@@ -30,13 +30,13 @@ const app = {
     populateWeeklyPlan() {
         // Auto-populate this week (Mon Mar 31 - Sun Apr 6, 2026) if not already set
         const weekPlan = {
-            '2026-03-31': { breakfast: ['b1'], lunch: ['w1'], dinner: ['w5'], snack: ['w4'] },
-            '2026-04-01': { breakfast: ['b4'], lunch: ['l2'], dinner: ['w2'], snack: ['w3'] },
-            '2026-04-02': { breakfast: ['b2'], lunch: ['w1'], dinner: ['d3'], snack: ['w4'] },
-            '2026-04-03': { breakfast: ['b3'], lunch: ['l1'], dinner: ['w5'], snack: ['w4'] },
-            '2026-04-04': { breakfast: ['b1'], lunch: ['l2'], dinner: ['w2'], snack: ['w3'] },
-            '2026-04-05': { breakfast: ['b2'], lunch: ['w1'], dinner: ['d1'], snack: ['w4'] },
-            '2026-04-06': { breakfast: ['b4'], lunch: ['w1'], dinner: ['d2'], snack: ['w4'] },
+            '2026-03-30': { breakfast: ['b1'], lunch: ['w1'], dinner: ['w5'], snack: ['w4'] },
+            '2026-03-31': { breakfast: ['b4'], lunch: ['l2'], dinner: ['w2'], snack: ['w3'] },
+            '2026-04-01': { breakfast: ['b2'], lunch: ['w1'], dinner: ['d3'], snack: ['w4'] },
+            '2026-04-02': { breakfast: ['b3'], lunch: ['l1'], dinner: ['w5'], snack: ['w4'] },
+            '2026-04-03': { breakfast: ['b1'], lunch: ['l2'], dinner: ['w2'], snack: ['w3'] },
+            '2026-04-04': { breakfast: ['b2'], lunch: ['w1'], dinner: ['d1'], snack: ['w4'] },
+            '2026-04-05': { breakfast: ['b4'], lunch: ['w1'], dinner: ['d2'], snack: ['w4'] },
         };
 
         let populated = false;
@@ -316,9 +316,14 @@ const app = {
         el.style.strokeDasharray = circumference;
         el.style.strokeDashoffset = offset;
 
-        // Color change when over target
+        // Protein over target = green (good!), calories over = red (warning)
+        el.style.stroke = '';
         if (current > target * 1.05) {
-            el.style.stroke = '#EF4444';
+            if (elementId === 'proteinRingFill') {
+                el.style.stroke = '#22C55E'; // green — hitting protein is great
+            } else if (elementId === 'calorieRingFill') {
+                el.style.stroke = '#EF4444'; // red — over calories
+            }
         }
     },
 

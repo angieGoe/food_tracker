@@ -545,7 +545,7 @@ const app = {
                 <h3>Storage & Reheating</h3>
                 <div class="recipe-storage">${recipe.storage}</div>
             </div>
-            <p style="font-size:0.75rem;color:var(--text-light);margin-top:1rem;">Source: ${recipe.source || 'USDA FoodData Central'}</p>
+            <p style="font-size:0.75rem;color:var(--text-light);margin-top:1rem;">Source: ${(recipe.source || '').startsWith('http') ? `<a href="${recipe.source}" target="_blank" rel="noopener" style="color:var(--accent);">${recipe.source}</a>` : (recipe.source || 'USDA FoodData Central')}</p>
             <button class="btn-secondary" onclick="app.closeRecipeDetail(); app.openEditRecipeModal('${recipe.id}')" style="margin-top:1rem;width:100%;">Edit Recipe</button>
         `;
 
@@ -572,6 +572,7 @@ const app = {
         document.getElementById('editRecipeIngredients').value = recipe.ingredients.join('\n');
         document.getElementById('editRecipeInstructions').value = recipe.instructions.join('\n');
         document.getElementById('editRecipeStorage').value = recipe.storage || '';
+        document.getElementById('editRecipeSource').value = recipe.source || '';
 
         document.getElementById('editRecipeModal').classList.add('active');
     },
@@ -593,7 +594,8 @@ const app = {
             fat: parseFloat(document.getElementById('editRecipeFat').value),
             ingredients: document.getElementById('editRecipeIngredients').value.split('\n').filter(l => l.trim()),
             instructions: document.getElementById('editRecipeInstructions').value.split('\n').filter(l => l.trim()),
-            storage: document.getElementById('editRecipeStorage').value
+            storage: document.getElementById('editRecipeStorage').value,
+            source: document.getElementById('editRecipeSource').value
         };
 
         // Check if it's a built-in recipe — save override to customRecipes
@@ -719,7 +721,7 @@ const app = {
             ingredients: document.getElementById('newRecipeIngredients').value.split('\n').filter(l => l.trim()),
             instructions: document.getElementById('newRecipeInstructions').value.split('\n').filter(l => l.trim()),
             storage: document.getElementById('newRecipeStorage').value || 'No storage notes provided.',
-            source: 'Custom recipe'
+            source: document.getElementById('newRecipeSource').value || 'Custom recipe'
         };
         this.customRecipes.push(recipe);
         this.saveCustomRecipes();
@@ -1158,12 +1160,16 @@ const app = {
                     if (n.fatContent) document.getElementById('newRecipeFat').value = parseNum(n.fatContent);
                 }
 
+                // Auto-fill source URL
+                document.getElementById('newRecipeSource').value = url;
+
                 statusEl.textContent = 'Recipe imported! Review and fill in any missing fields, then save.';
                 statusEl.style.color = 'var(--success)';
             } else {
                 // Fallback: try to get the page title at least
                 const title = doc.querySelector('title');
                 if (title) document.getElementById('newRecipeName').value = title.textContent.trim().split('|')[0].split('-')[0].trim();
+                document.getElementById('newRecipeSource').value = url;
                 statusEl.textContent = 'Could not extract full recipe data. Please fill in the fields manually.';
                 statusEl.style.color = 'var(--warning)';
             }

@@ -471,6 +471,10 @@
                         <label>Storage & Reheating Notes</label>
                         <textarea id="editRecipeStorage" rows="3"></textarea>
                     </div>
+                    <div class="form-group">
+                        <label>Source URL</label>
+                        <input type="text" id="editRecipeSource" placeholder="https://...">
+                    </div>
                     <div style="display:flex;gap:0.75rem;margin-top:1rem;">
                         <button type="submit" class="btn-primary" style="flex:1;">Save Changes</button>
                         <button type="button" class="btn-secondary" onclick="app.deleteRecipe()" style="color:var(--danger);border-color:var(--danger);">Delete Recipe</button>
@@ -536,6 +540,10 @@
                     <div class="form-group">
                         <label>Storage & Reheating Notes</label>
                         <textarea id="newRecipeStorage" rows="3" placeholder="How to store and reheat..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Source URL</label>
+                        <input type="text" id="newRecipeSource" placeholder="https://...">
                     </div>
                     <button type="submit" class="btn-primary" style="width:100%;margin-top:1rem;">Save Recipe</button>
                 </form>

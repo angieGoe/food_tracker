@@ -17,7 +17,6 @@ const app = {
         this.loadCustomRecipes();
         this.loadHiddenRecipes();
         this.loadRatings();
-        this.populateWeeklyPlan();
         this.setupNavigation();
         this.setupDateNav();
         this.setupWeekNav();
@@ -29,34 +28,6 @@ const app = {
         this.renderMealPlanner();
         this.checkReassessment();
         this.setupFilterButtons();
-    },
-
-    // ========== WEEKLY MEAL PLAN ==========
-    populateWeeklyPlan() {
-        // Auto-populate this week (Mon Mar 31 - Sun Apr 6, 2026) if not already set
-        const weekPlan = {
-            '2026-03-30': { breakfast: ['b1'], lunch: ['w1'], dinner: ['w5'], snack: ['w4'] },
-            '2026-03-31': { breakfast: ['b4'], lunch: ['l2'], dinner: ['w2'], snack: ['w3'] },
-            '2026-04-01': { breakfast: ['b2'], lunch: ['w1'], dinner: ['d3'], snack: ['w4'] },
-            '2026-04-02': { breakfast: ['b3'], lunch: ['l1'], dinner: ['w5'], snack: ['w4'] },
-            '2026-04-03': { breakfast: ['b1'], lunch: ['l2'], dinner: ['w2'], snack: ['w3'] },
-            '2026-04-04': { breakfast: ['b2'], lunch: ['w1'], dinner: ['d1'], snack: ['w4'] },
-            '2026-04-05': { breakfast: ['b4'], lunch: ['w1'], dinner: ['d2'], snack: ['w4'] },
-        };
-
-        let populated = false;
-        for (const [date, meals] of Object.entries(weekPlan)) {
-            if (!this.mealLog[date] || (
-                this.mealLog[date].breakfast.length === 0 &&
-                this.mealLog[date].lunch.length === 0 &&
-                this.mealLog[date].dinner.length === 0 &&
-                this.mealLog[date].snack.length === 0
-            )) {
-                this.mealLog[date] = meals;
-                populated = true;
-            }
-        }
-        if (populated) this.saveMealLog();
     },
 
     // ========== SETTINGS ==========

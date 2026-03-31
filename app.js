@@ -13,6 +13,7 @@ const app = {
         this.loadSettings();
         this.loadMealLog();
         this.loadCustomRecipes();
+        this.loadHiddenRecipes();
         this.populateWeeklyPlan();
         this.setupNavigation();
         this.setupDateNav();
@@ -152,11 +153,17 @@ const app = {
         localStorage.setItem('ft_customRecipes', JSON.stringify(this.customRecipes));
     },
 
+    loadHiddenRecipes() {
+        const saved = localStorage.getItem('ft_hiddenRecipes');
+        this.hiddenRecipes = saved ? JSON.parse(saved) : [];
+    },
+
     getAllRecipes() {
-        // Custom recipes with _overrides field replace the built-in recipe with that id
+        const hidden = new Set(this.hiddenRecipes || []);
         const overrideIds = new Set(this.customRecipes.filter(r => r._overrides).map(r => r._overrides));
-        const base = RECIPES_DB.filter(r => !overrideIds.has(r.id));
-        return [...base, ...this.customRecipes];
+        const base = RECIPES_DB.filter(r => !overrideIds.has(r.id) && !hidden.has(r.id));
+        const custom = this.customRecipes.filter(r => !hidden.has(r.id));
+        return [...base, ...custom];
     },
 
     getDayLog(dateKey) {
@@ -553,15 +560,28 @@ const app = {
 
         if (customIdx >= 0) {
             this.customRecipes.splice(customIdx, 1);
-            this.saveCustomRecipes();
-            this.closeEditRecipeModal();
-            this.renderRecipes();
-            this.renderDashboard();
-            this.showToast('Recipe deleted.');
-        } else {
-            // It's a built-in recipe — can't delete, but can hide
-            this.showToast('Built-in recipes cannot be deleted, but you can edit them.');
         }
+
+        // Also hide built-in recipes by adding to a hidden list
+        if (!this.hiddenRecipes) this.hiddenRecipes = [];
+        if (!this.hiddenRecipes.includes(id)) {
+            this.hiddenRecipes.push(id);
+        }
+        localStorage.setItem('ft_hiddenRecipes', JSON.stringify(this.hiddenRecipes));
+        this.saveCustomRecipes();
+
+        // Remove from all meal logs
+        for (const dk of Object.keys(this.mealLog)) {
+            for (const slot of ['breakfast', 'lunch', 'dinner', 'snack']) {
+                this.mealLog[dk][slot] = (this.mealLog[dk][slot] || []).filter(rid => rid !== id);
+            }
+        }
+        this.saveMealLog();
+
+        this.closeEditRecipeModal();
+        this.renderRecipes();
+        this.renderDashboard();
+        this.showToast('Recipe deleted.');
     },
 
     // ========== RECIPE GRID ==========
